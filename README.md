@@ -13,7 +13,8 @@ git clone git@github.com:kuranne/myShScript
 ```
 - After did that, for comfort to run the script you may put
 ```bash
-echo 'export PATH="Path/to/directoryWhichHavegscscript:${PATH}"' >> $HOME/.zshrc
+cd myShScript
+echo 'export PATH="$(pwd):${PATH}"' >> $HOME/.zshrc
 ```
 - Then reopen your shell or use
 ```bash
