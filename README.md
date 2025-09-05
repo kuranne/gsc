@@ -14,7 +14,7 @@ git clone git@github.com:kuranne/myShScript
 - After did that, for comfort to run the script you may put
 ```bash
 cd myShScript
-echo 'export PATH="$(pwd):${PATH}"' >> $HOME/.zshrc
+echo 'export PATH="#EditThisToPATHofThisDirectory:${PATH}"' >> $HOME/.zshrc
 ```
 - Then reopen your shell or use
 ```bash

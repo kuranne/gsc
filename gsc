@@ -266,7 +266,9 @@ gitLog() {
 }
 gitPull() {
     gitValidateRepo || return 1
-    git pull
+    local varBranch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    local varPull=$(git config branch."$varBranch".remote 2>/dev/null || echo origin)
+    git pull $varPull $varBranch
 }
 gscAutoManagement() {
     if [ -d .git ]; then
