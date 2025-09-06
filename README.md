@@ -9,7 +9,7 @@ This progect aim to create gsc(git script) and sshsc.sh(ssh script) for fix my p
 
 - To use gsc, you can clone this repository into your directory by:
 ``` bash
-git clone git@github.com:kuranne/myShScript
+git clone https://github.com/kuranne/myShScript
 ```
 - After did that, for comfort to run the script you may put
 ```bash
