@@ -1,5 +1,5 @@
 
-# Git & SSH managements
+# For Git & SSH managements (gsc & sshsc.sh)
 
 This progect aim to create gsc(git script) and sshsc.sh(ssh script) for fix my pain point who has more than one Git account and using SSH to autherize.
 

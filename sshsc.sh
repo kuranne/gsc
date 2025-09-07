@@ -1,18 +1,30 @@
 #!/bin/zsh
 
-nowDir="$(cd -- "$(dirname -- "${(%):-%x}")" && pwd)"
+local nowDir="$(cd -- "$(dirname -- "${(%):-%x}")" && pwd)"
+local hereDir="$(pwd)"
 
-removeSsh=0
-createSsh=0
 
-if [[ -f ".gsc.config" ]]; then
-    source ".gsc.config"
+local removeSsh=0
+local createSsh=0
+
+local selectedAccounts=()
+
+if [ -f "${hereDir}/.gsc.config" ]; then
+    source "${hereDir}/.gsc.config"
+elif [ -f "${nowDir}/gsc.config" ]; then
+    cp "${nowDir}/gsc.config" "${hereDir}/.gsc.config" || errorExit
+    source "${hereDir}/.gsc.config"
 else
-    echo "$ERROR from sshsc.sh SAY: .gsc.config not found."
-    exit 1
+    echo "${WARNING} Can't load gsc.config into this directory"
+    RED='\033[0;31m'; PINK='\033[95m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; BLUE='\033[34m'; NC='\033[0m'
+    ERROR="${RED}ERROR:${NC}"; WARNING="${YELLOW}WARNING:${NC}"; SUCCESS="${GREEN}SUCCESS:${NC}"; CHOICE="${BLUE}CHOICE:${NC}"; USAGE="${BLUE}USAGE:${NC}"; HINT="${BLUE}HINT:${NC}"; ANNOUNCE="${CYAN}ANNOUNCE:${NC}"; DETECTED="${CYAN}DETECTED:${NC}"
 fi
 
-selectedAccounts=()
+gscClear() {
+    if [[ ! -d .git && -f .gsc.config ]]; then 
+        rm .gsc.config 
+    fi
+}
 
 while getopts "rC" opt; do
     case $opt in
@@ -66,7 +78,6 @@ createSshKey() {
 [[ $removeSsh -eq 1 ]] && removeSshKey
 [[ $createSsh -eq 1 ]] && createSshKey
 
-
 # add ssh keys
 for acct in "${selectedAccounts[@]}"; do
     if [ -f $HOME/.ssh/id_ssh_${acct} ]; then
@@ -77,8 +88,10 @@ for acct in "${selectedAccounts[@]}"; do
         read -k 1 createSshKeyAns
         if [[ "$createSshKeyAns" == "N" || "$createSshKeyAns" == "n" ]]; then
             echo "Did't do anything."
+            gscClear
             exit 0
         fi
         createSshKey
     fi
 done
+gscClear
