@@ -6,7 +6,9 @@
 !.vscode/extensions.json
 *.code-workspace
 
- 
+# kuranne
+core.kuranne.zsh
+
 # Common credential files
 **/credentials.json
 **/client_secrets.json

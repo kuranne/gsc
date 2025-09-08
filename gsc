@@ -40,18 +40,18 @@ local stashFlag=0; local stashMessage=""; local stashPopFlag=0
 # tag
 local tagCreateFlag=0; local tagName=""; local tagListFlag=0; local tagDeleteFlag=0; local tagDeleteName=""
 # remote
-local remoteListFlag=0; local remoteSetFlag=0; local remoteName=""; local remoteUrl=""
+local remoteListFlag=0;
 # diff
 local diffFlag=0
 # -h
 local helpFlag=0
 
 # option
-while getopts "A:C:c:SIiaPpsluMb:B:d:t:T:r:R:D:Bh" opt; do
+while getopts "A:C:c:d:b:t:T:DSIiaPpsluMbRBh" opt; do
     case $opt in
-        A) switchAccountFlag=1; accountName="$OPTARG" ;;
-        C) cloneFlag=1; cloneUrl="$OPTARG" ;;
-        c) commitFlag=1; commitMessage="$OPTARG" ;;
+        A) switchAccountFlag=1; accountName="$OPTARG" ;; ##
+        C) cloneFlag=1; cloneUrl="$OPTARG" ;; ##
+        c) commitFlag=1; commitMessage="$OPTARG" ;; ##
         S) sshActivateFlag=1 ;;
         I) initRepoFlag=1 ;;
         i) gitignoreFlag=1 ;;
@@ -62,12 +62,11 @@ while getopts "A:C:c:SIiaPpsluMb:B:d:t:T:r:R:D:Bh" opt; do
         l) logFlag=1 ;;
         u) showNowAccountFlag=1 ;;
         M) deleteMergeBranchFlag=1 ;;
-        b) branchCreateFlag=1; branchName="$OPTARG" ;;
+        b) branchCreateFlag=1; branchName="$OPTARG" ;; ##
         B) branchListFlag=1 ;;
-        d) branchDeleteFlag=1; branchDeleteName="$OPTARG" ;;
-        t) tagCreateFlag=1; tagName="$OPTARG" ;;
-        T) tagDeleteFlag=1; tagDeleteName="$OPTARG" ;;
-        r) remoteSetFlag=1; remoteName="$OPTARG"; remoteUrl="${!OPTIND}"; OPTIND=$((OPTIND+1)) ;;
+        d) branchDeleteFlag=1; branchDeleteName="$OPTARG" ;; ##
+        t) tagCreateFlag=1; tagName="$OPTARG" ;; ##
+        T) tagDeleteFlag=1; tagDeleteName="$OPTARG" ;; ##
         R) remoteListFlag=1 ;;
         D) diffFlag=1 ;;
         h) helpFlag=1 ;;
@@ -122,7 +121,7 @@ gitValidateNotFoundGit || errorExit
 [[ $tagListFlag -eq 1 ]] && gitTagList
 [[ $tagDeleteFlag -eq 1 ]] && gitTagDelete
 [[ $remoteListFlag -eq 1 ]] && gitRemoteList
-[[ $remoteSetFlag -eq 1 ]] && gitRemoteSet
+[[ $ -eq 1 ]] && gitRemoteSet
 [[ $diffFlag -eq 1 ]] && gitDiff
 [[ $blameFlag -eq 1 ]] && gitBlame
 [[ $syncFlag -eq 1 ]] && gitSync
