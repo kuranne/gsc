@@ -22,7 +22,7 @@ gitrpstryResetHard() {
 gitSync() {
     gitValidateRepo || errorExit
     git fetch --all --prune || { echo "$ERROR Failed to fetch"; errorExit; }
-    git pull || { echo "$ERROR Failed to pull"; errorExit; }
+    gitPull || { echo "$ERROR Failed to pull"; errorExit; }
     echo "$SUCCESS Synced with remote"
 }
 
