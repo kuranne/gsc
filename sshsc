@@ -1,0 +1,43 @@
+#!/bin/zsh
+
+local nowDir="$(cd -- "$(dirname -- "${(%):-%x}")" && pwd)"
+local hereDir="$(pwd)"
+
+# IMPORT
+for COREUTIL in "$nowDir/kurannelib/"core.*.sh; do
+    source "$COREUTIL" || { echo "\033[0;31mERROR:\033[0m Can't load $COREUTIL"; exit 1 ; }
+done
+
+for PATHforSSH in "$nowDir/kurannelib/ssh/"ssh.*.sh; do
+    source "$PATHforSSH" || { echo "\033[0;31mERROR:\033[0m Can't load $PATHforSSH"; exit 1 ; }
+done
+
+# origin varieables
+local removeSsh=0
+local createSsh=0
+
+selectedAccounts=()
+
+while getopts "rC" opt; do
+    case $opt in
+        r) removeSsh=1 ;;
+        C) createSsh=1 ;;
+        \?) echo "$USAGE ssc [-r|-C] [accountName...]" >&2; exit 1 ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+
+for arg in "$@"; do
+    if [[ -n "${gitAccounts[$arg]}" ]]; then
+        selectedAccounts+=("$arg")
+    else
+        echo "$WARNING ${arg} is not a valid account!" >&2
+    fi
+done
+
+[[ $removeSsh -eq 1 ]] && removeSshKey
+[[ $createSsh -eq 1 ]] && createSshKey
+
+addtoSSHAgent
+gscClear
