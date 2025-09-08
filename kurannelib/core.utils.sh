@@ -1,36 +1,69 @@
-# Validation functions (code by chatGPT)
-gscClear() {
-    if [[ ! -d .git && -f .gsc.config ]]; then 
-        rm .gsc.config 
-    fi
-}
+#--- Color ---#
+RED='\033[0;31m'
+PINK='\033[95m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BLUE='\033[34m'
+NC='\033[0m'
 
-errorExit() {
-    gscClear
-    exit 1
-}
+#--- perror ---#
+ERROR="${RED}ERROR:${NC}"
+WARNING="${YELLOW}WARNING:${NC}"
+SUCCESS="${GREEN}SUCCESS:${NC}"
+CHOICE="${BLUE}CHOICE:${NC}"
+USAGE="${BLUE}USAGE:${NC}"
+HINT="${BLUE}HINT:${NC}"
+ANNOUNCE="${CYAN}ANNOUNCE:${NC}"
+DETECTED="${CYAN}DETECTED:${NC}"
 
-gitValidateURL() {
-    local url="$1"
-    [[ -n "$url" ]] || { echo "$ERROR URL cannot be empty"; errorExit; }
-    echo "$url" | grep -Eq '^(https?|git|ssh)://|^git@.+:.+' || { echo "$ERROR Invalid Git URL format"; errorExit; }
-}
+#--- gsc.config ---#
+[[ -f "${nowDir}/kurannelib/gsc.config" ]] || { echo "\033[0;31mERROR:\033[0m not found gsc.config in $nowDir/kurannelib"; exit 1 ; }
 
-gitValidateRepo() {
-    [[ -d .git ]] || { echo "$ERROR No .git dir here"; errorExit; }
-}
+if [ -f "${hereDir}/.gsc.config" ]; then
+    source "${hereDir}/.gsc.config"
+elif [ -f "${nowDir}/kurannelib/gsc.config" ]; then
+    cp "${nowDir}/kurannelib/gsc.config" "${hereDir}/.gsc.config" || errorExit
+    source "${hereDir}/.gsc.config"
+else
+    echo "${ERROR} Can't load gsc.config" || errorExit
+fi
 
-gitValidateUsername() {
-    local accountName="$1"
-    [[ -n "$accountName" ]] || { echo "$ERROR Account name cannot be empty"; errorExit; }
-}
+#--- Help ---#
+HELPCOMMAND="$USAGE gsc is from git script
+Options:
+  -A <account>  Switch to account
+  -S           use SSH to authorize
+  -C <url>      Clone repository  
+  -I            Initialize repository
+  -i            Create .gitignore
+  -a            Add all files
+  -c <message>  Commit with message
+  -P            Pull
+  -p            Push to origin
+  -M            Delete merged branches except master/main/dev
+  -B            List branches
+  -b <name>     Create branch
+  -d <name>     Delete branch
+  -t <name>     Create tag
+  -T <name>     Delete tag
+  -R            List remotes
+  -D            Show diff
+  -l            Show log
+  -s            Show status
+  -u            Show now using account
+  -h            Help
 
-gitValidateCommitMessage() {
-    local message="$1"
-    [[ -n "$message" ]] || { echo "$ERROR Commit message cannot be empty"; errorExit; }
-    [[ ${#message} -ge 3 ]] || { echo "$ERROR Commit message too short (minimum 3 characters)"; errorExit; }
-}
+Additional commands:
+  stash <msg>    Save stash
+  stashpop       Pop stash
+  blame <file>   Git blame
+  sync           Fetch+pull+prune
+  remove         remove .git and .gitignore
+  reset         Hard reset
 
-gitValidateNotFoundGit() {
-    command -v git >/dev/null 2>&1 || { echo "$ERROR Git is not installed"; errorExit; }
-}
+Examples:
+  gsc -SA user -C https://github.com/user/repo.git
+  gsc -A user -ac 'Initial commit' -p
+  gsc -Iac 'First commit' -p 
+  gsc -SuA user -C git@github.com:user/repo.git -ac 'Initial commit' -psl"

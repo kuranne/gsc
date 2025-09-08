@@ -1,3 +1,4 @@
+#--- Remove SSH key ---#
 removeSshKey() {
     if [[ ${#selectedAccounts[@]} -eq 0 ]]; then
 
@@ -20,6 +21,7 @@ removeSshKey() {
     fi
 }
 
+#--- Create SSH key ---#
 createSshKey() {
     for acct in "${selectedAccounts[@]}"; do
         ssh-keygen -t rsa -b 4096 -C "${gitAccounts[$acct]}" -f $HOME/.ssh/id_ssh_${acct}
@@ -27,15 +29,16 @@ createSshKey() {
     done
 }
 
+#--- Add to Agent ---#
 addtoSSHAgent() {
     for acct in "${selectedAccounts[@]}"; do
         if [ -f $HOME/.ssh/id_ssh_${acct} ]; then
             ssh-add ~/.ssh/id_ssh_${acct} > /dev/null 2>&1
         else
             echo "${YELLOW}WARNING: ${NC}Can't find id_ssh_${acct} on your ~/.ssh do u want to create new one?"
-            echo "${RED}CHOICE: ${NC}Enter for Yes, C for No: "
+            echo "${RED}CHOICE: ${NC}Y/y for Yes, else for No: "
             read -k 1 createSshKeyAns
-            if [[ "$createSshKeyAns" == "N" || "$createSshKeyAns" == "n" ]]; then
+            if [[ ! "$createSshKeyAns" == "Y" && ! "$createSshKeyAns" == "y" ]]; then
                 echo "Did't do anything."
                 gscClear
                 exit 0

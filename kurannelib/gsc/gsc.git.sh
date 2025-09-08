@@ -1,27 +1,52 @@
-gitrpstrySwitchAccount() { #gsc -A <username same as in .gsc.config>
-    gitValidateUsername "$accountName" || errorExit  
-    
-    if [[ -n "${gitAccounts[$accountName]}" ]]; then
-        if [ -d .git ]; then
-            git config user.name "$accountName" || { echo "$ERROR Failed to set user name"; errorExit; }
-            git config user.email "${gitAccounts[$accountName]}" || { echo "$ERROR Failed to set user email"; errorExit; }
-        fi
-        if [ $sshActivateFlag -eq 1 ]; then
-            "${SHELL:-/bin/sh}" "$nowDir/sshsc" -r
-            [[ -f $HOME/.ssh/id_ssh_${accountName} ]] && "${SHELL:-/bin/sh}" "$nowDir/sshsc" "${accountName}"
-            echo "$SUCCESS Switched to ssh account: $accountName"
-        else
-            echo "${HINT} If you want to use  key, must -S for SSH activate"
-            echo "$SUCCESS Switched to non-ssh account: $accountName"
-        fi
-        currentAccount="$accountName"
-    else
-        echo "$ERROR Unknown account: $accountName"
-        echo "$HINT Available accounts: ${(k)gitAccounts}"
-        errorExit
+#--- Reset ---#
+gitrpstryResetHard() {
+    gitValidateRepo || errorExit
+
+    echo -ne "${WARNING} ${RED}¿Reset HARD?${NC}(Y/y to confirm): "
+    read -k 1 varResetAns
+    echo -ne "${WARNING} Want to backup?(Y/y to confirm)"
+    read -k 1varBackup
+    if [[ "$varBackup" == "Y" || "$varBackup" == "y" ]]; then
+    backupAll || errorExit
     fi
+    if [[ "$varResetAns" == "Y" || "$varResetAns" == "y" ]]; then
+        git reset --hard HEAD || { echo "${ERROR} reset failed"; errorExit; }        
+        git clean -fd || { echo "${ERROR} clean failed"; errorExit; }
+    else
+        echo "${CYAN}CANCELLED${NC}"
+    fi
+    
 }
 
+#--- Sync ---#
+gitSync() {
+    gitValidateRepo || errorExit
+    git fetch --all --prune || { echo "$ERROR Failed to fetch"; errorExit; }
+    git pull || { echo "$ERROR Failed to pull"; errorExit; }
+    echo "$SUCCESS Synced with remote"
+}
+
+#--- Stash ---#
+gitStashSave() {
+    gitValidateRepo || errorExit
+    local msg="$1"
+    git stash push -m "$msg" || { echo "$ERROR Failed to stash"; errorExit; }
+    echo "$SUCCESS Stashed with message: $msg"
+}
+
+gitStashPop() {
+    gitValidateRepo || errorExit
+    git stash pop || { echo "$ERROR Failed to pop stash"; errorExit; }
+    echo "$SUCCESS Stash popped"
+}
+
+#--- Blame ---#
+gitBlame() {
+    gitValidateRepo || errorExit
+    git blame "$blameFile" || { echo "$ERROR Failed to blame $blameFile"; errorExit; }
+}
+
+#--- Clone ---#
 gitrpstryClone() { #gsc -C <git repository url or ssh>
     gitValidateURL "$cloneUrl" || errorExit
     
@@ -35,13 +60,15 @@ gitrpstryClone() { #gsc -C <git repository url or ssh>
     gitPull || { echo "${WARNING} Failed to pull $varRepoName" }
 }
 
+
+#--- Init ---#
 gitrpstryInit() {
     if [ -d .git ]; then
-        echo -e "${YELLOW}NOTICE: ${NC}Already initialized"
+        echo -e "${DETECTED} Already initialized"
         return 0
     fi
     
-    git init || { echo "$ERROR Failed to initialize repository"; errorExit; }
+    git init 2>/dev/null || { echo "$ERROR Failed to initialize repository"; errorExit; }
     echo -e "${GREEN}Alright! ${NC}Init Successful"
     
     
@@ -52,34 +79,7 @@ gitrpstryInit() {
     fi
 }
 
-gitrpstryShowAccount() {
-    local userName=$(git config user.name 2>/dev/null)
-    local userEmail=$(git config user.email 2>/dev/null)
-    
-    if [[ -n "$userName" && -n "$userEmail" ]]; then
-        echo -e "${CYAN}Now using account: ${NC}$userName <$userEmail>"
-    elif [ $cloneFlag -eq 1 ]; then
-        echo -e "$SUCCESS don't forgot to cd into your clone directory!"
-    else
-        echo -e "$WARNING user.name and user.email didn't configured yet"
-    fi
-
-    if [ $sshActivateFlag -eq 1 ]; then
-        echo -e "${CYAN}SSH Agent keys loaded:${NC}"
-        if ssh-add -l >/dev/null 2>&1; then
-            ssh-add -l | while read -r line; do
-                echo "  $line"
-            done
-
-            if [[ -n "$currentAccount" && -f "$HOME/.ssh/id_ssh_${currentAccount}" ]]; then
-                ssh-keygen -lf "$HOME/.ssh/id_ssh_${currentAccount}.pub" 2>/dev/null
-            fi
-        else
-            echo "No SSH keys loaded in agent"
-        fi
-    fi
-}
-
+#--- gitignore ---#
 gitrpstryGitignore() {
     if [ -f .gitignore ]; then
         echo -e "$DETECTED .gitignore already exists, skipping..."
@@ -112,6 +112,7 @@ EOF
     echo -e "${SUCCESS} .gitignore created successfully"
 }
 
+#--- git Add ---#
 gitrpstryAdd() {
     gitValidateRepo || errorExit
     
@@ -119,6 +120,7 @@ gitrpstryAdd() {
     echo "$SUCCESS Files added to staging"
 }
 
+#--- git Commit ---#
 gitrpstryCommit() {
     gitValidateRepo || errorExit
     
@@ -133,6 +135,7 @@ gitrpstryCommit() {
     echo "$SUCCESS Committed with message: '$commitMessage'"
 }
 
+#--- git Pull ---#
 gitPull() {
     gitValidateRepo || errorExit
     local varBranch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
@@ -140,9 +143,9 @@ gitPull() {
     git pull $varPull $varBranch
 }
 
+#--- git Push ---#
 gitrpstryPush() {
     gitValidateRepo || errorExit
-    
 
     local remotes=($(git remote))
     if [ ${#remotes[@]} -eq 0 ]; then
@@ -171,35 +174,28 @@ gitrpstryPush() {
     else
         varBranch="${branches[1]}"
     fi
-    echo "${WARNING} Want to pull before push?(Y/y) or Enter to confirm: "
-    read varPushPullAns
-    if [[ "$varPushPullAns" == "Y" || "$varPushPullAns" == "y" || -z "$varPushPullAns" ]];then
+    echo "${WARNING} Want to pull before push?(Y/y to confirm): "
+    read -k 1 varPushPullAns
+    if [[ "$varPushPullAns" == "Y" || "$varPushPullAns" == "y" ]];then
         git pull "$varPush" || { echo "$ERROR Failed to pull from $varPush"; errorExit; }
     fi
     git push "$varPush" "$varBranch" || { echo "$ERROR Failed to push to $varPush/$varBranch"; errorExit; }
     echo "$SUCCESS Pushed to $varPush/$varBranch"
 }
 
-gitDeleteMergeBranches() {
-    gitValidateRepo || errorExit
-    local currentBranch=$(git rev-parse --abbrev-ref HEAD)
-    git branch --merged | egrep -v "(^\*|master|main|dev)" | while read branch; do
-        echo "${WARNING} Deleting merged branch: $branch"
-        git branch -d "$branch" || echo "${ERROR} Failed to delete branch: $branch"
-    done
-    echo "${SUCCESS} Merged branches deleted (not master/main/dev and $currentBranch)"
-}
-
+#--- Status ---#
 gitStatus() {
     gitValidateRepo || errorExit
     git status
 }
 
+#--- Log ---#
 gitLog() {
     gitValidateRepo || errorExit
     git log --oneline --graph --decorate -n 10
 }
 
+#--- Branch ---#
 gitBranchCreate() {
     gitValidateRepo || errorExit
     git checkout -b "$branchName" || { echo "$ERROR Failed to create branch $branchName"; errorExit; }
@@ -217,6 +213,17 @@ gitBranchDelete() {
     echo "$SUCCESS Deleted branch $branchDeleteName"
 }
 
+gitDeleteMergeBranches() {
+    gitValidateRepo || errorExit
+    local currentBranch=$(git rev-parse --abbrev-ref HEAD)
+    git branch --merged | egrep -v "(^\*|master|main|dev)" | while read branch; do
+        echo "${WARNING} Deleting merged branch: $branch"
+        git branch -d "$branch" || echo "${ERROR} Failed to delete branch: $branch"
+    done
+    echo "${SUCCESS} Merged branches deleted (not master/main/dev and $currentBranch)"
+}
+
+#--- Tag ---#
 gitTagCreate() {
     gitValidateRepo || errorExit
     git tag "$tagName" || { echo "$ERROR Failed to create tag $tagName"; errorExit; }
@@ -234,56 +241,14 @@ gitTagDelete() {
     echo "$SUCCESS Deleted tag: $tagDeleteName"
 }
 
+#--- Remote ---#
 gitRemoteList() {
     gitValidateRepo || errorExit
     git remote -v
 }
 
+#--- Diff ---#
 gitDiff() {
     gitValidateRepo || errorExit
     git diff
 }
-
-gscHelp() {
-    echo -e $HELPCOMMAND
-}
-
-### END OF MAIN FUNCTION ###
-
-HELPCOMMAND="$USAGE gsc is from git script
-Options:
-  -A <account>  Switch to account
-  -S           use SSH to authorize
-  -C <url>      Clone repository  
-  -I            Initialize repository
-  -i            Create .gitignore
-  -a            Add all files
-  -c <message>  Commit with message
-  -P            Pull
-  -p            Push to origin
-  -M            Delete merged branches except master/main/dev
-  -B            List branches
-  -b <name>     Create branch
-  -d <name>     Delete branch
-  -t <name>     Create tag
-  -T <name>     Delete tag
-  -R            List remotes
-  -D            Show diff
-  -l            Show log
-  -s            Show status
-  -u            Show now using account
-  -h            Help
-
-Additional commands:
-  stash <msg>    Save stash
-  stashpop       Pop stash
-  blame <file>   Git blame
-  sync           Fetch+pull+prune
-  remove         remove .git and .gitignore
-  reset         Hard reset
-
-Examples:
-  gsc -SA user -C https://github.com/user/repo.git
-  gsc -A user -ac 'Initial commit' -p
-  gsc -Iac 'First commit' -p 
-  gsc -SuA user -C git@github.com:user/repo.git -ac 'Initial commit' -psl"

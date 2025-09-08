@@ -1,0 +1,3 @@
+gscHelp() {
+    echo -e $HELPCOMMAND
+}
