@@ -138,9 +138,36 @@ gitrpstryCommit() {
 #--- git Pull ---#
 gitPull() {
     gitValidateRepo || errorExit
-    local varBranch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-    local varPull=$(git config branch."$varBranch".remote 2>/dev/null || echo origin)
-    git pull $varPull $varBranch
+    
+    local remotes=($(git remote))
+    if [ ${#remotes[@]} -eq 0 ]; then
+        echo "$ERROR No remote found. Add a remote first with: git remote add <name> <url>"
+        errorExit
+    elif [ ${#remotes[@]} -gt 1 ]; then
+        echo "${CHOICE} Multiple remotes found:"
+        select chosenRemote in "${remotes[@]}"; do
+            [ -n "$chosenRemote" ] && break
+        done
+        varPull="$chosenRemote"
+    else
+        varPull="${remotes[1]}"
+    fi
+
+    local branches=($(git branch --format='%(refname:short)'))
+    if [ ${#branches[@]} -eq 0 ]; then
+        echo "$ERROR No branches found."
+        errorExit
+    elif [ ${#branches[@]} -gt 1 ]; then
+        echo "${CHOICE} Multiple branches found:"
+        select chosenBranch in "${branches[@]}"; do
+            [ -n "$chosenBranch" ] && break
+        done
+        varBranch="$chosenBranch"
+    else
+        varBranch="${branches[1]}"
+    fi
+    git push "$varPull" "$varBranch" || { echo "$ERROR Failed to pusll to $varPull/$varBranch"; errorExit; }
+    echo "$SUCCESS Pushed to $varPull/$varBranch"
 }
 
 #--- git Push ---#
