@@ -57,7 +57,9 @@ gitrpstryClone() { #gsc -C <git repository url or ssh>
     cd "$varRepoName" || { echo "$ERROR Failed to enter cloned directory"; errorExit; }
     
     echo "$SUCCESS Cloned directory: ${PINK}$varRepoName${NC}"
-    gitPull || { echo "${WARNING} Failed to pull $varRepoName" }
+    echo "$WARNING Want to pull?(Y/y to confirm): "
+    read -k 1 varPull
+    { [[ $varPull == "Y" ]] || [[ $varPull == "y" ]];} && { gitPull || { echo "${WARNING} Failed to pull $varRepoName"; }}
 }
 
 
