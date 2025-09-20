@@ -6,14 +6,14 @@ removeSshKey() {
 
         for acct in "${(@k)gitAccounts}"; do
             if ssh-add -l | grep -q "${gitAccounts[$acct]}"; then
-                ssh-add -d $HOME/.ssh/id_ssh_${acct} > /dev/null 2>&1
+                ssh-add -d $HOME/.ssh/id_rsa_${acct} > /dev/null 2>&1
             fi
         done
 
     else
         for acct in "${selectedAccounts[@]}"; do
             if ssh-add -l | grep -q "${gitAccounts[$acct]}"; then
-                ssh-add -d $HOME/.ssh/id_ssh_${acct} > /dev/null 2>&1
+                ssh-add -d $HOME/.ssh/id_rsa_${acct} > /dev/null 2>&1
                 echo "$SUCCESS Removed SSH key for $acct"
             fi
         done
@@ -24,18 +24,18 @@ removeSshKey() {
 #--- Create SSH key ---#
 createSshKey() {
     for acct in "${selectedAccounts[@]}"; do
-        ssh-keygen -t rsa -b 4096 -C "${gitAccounts[$acct]}" -f $HOME/.ssh/id_ssh_${acct}
-        cat $HOME/.ssh/id_ssh_${acct}.pub
+        ssh-keygen -t rsa -b 4096 -C "${gitAccounts[$acct]}" -f $HOME/.ssh/id_rsa_${acct}
+        cat $HOME/.ssh/id_rsa_${acct}.pub
     done
 }
 
 #--- Add to Agent ---#
 addtoSSHAgent() {
     for acct in "${selectedAccounts[@]}"; do
-        if [ -f $HOME/.ssh/id_ssh_${acct} ]; then
-            ssh-add ~/.ssh/id_ssh_${acct} > /dev/null 2>&1
+        if [ -f $HOME/.ssh/id_rsa_${acct} ]; then
+            ssh-add ~/.ssh/id_rsa_${acct} > /dev/null 2>&1
         else
-            echo "$WARNING Can't find id_ssh_${acct} on your ~/.ssh do u want to create new one?"
+            echo "$WARNING Can't find id_rsa_${acct} on your ~/.ssh do u want to create new one?"
             echo "$CHOICE [Y/y] for Yes, else for No: "
             read -k 1 createSshKeyAns
             if [[ ! "$createSshKeyAns" == "Y" && ! "$createSshKeyAns" == "y" ]]; then

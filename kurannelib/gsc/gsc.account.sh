@@ -9,7 +9,7 @@ gitrpstrySwitchAccount() { #gsc -A <username same as in .gsc.config>
         fi
         if [ $sshActivateFlag -eq 1 ]; then
             "${SHELL:-/bin/sh}" "$nowDir/sshsc" -r
-            [[ -f $HOME/.ssh/id_ssh_${accountName} ]] && "${SHELL:-/bin/sh}" "$nowDir/sshsc" "${accountName}"
+            [[ -f $HOME/.ssh/id_rsa_${accountName} ]] && "${SHELL:-/bin/sh}" "$nowDir/sshsc" "${accountName}"
             echo "$SUCCESS Switched to ssh account: $accountName" 
         else
             echo "${HINT} If you want to use  key, must -S for SSH activate"
@@ -43,8 +43,8 @@ gitrpstryShowAccount() {
                 echo "  $line"
             done
 
-            if [[ -n "$currentAccount" && -f "$HOME/.ssh/id_ssh_${currentAccount}" ]]; then
-                ssh-keygen -lf "$HOME/.ssh/id_ssh_${currentAccount}.pub" 2>/dev/null
+            if [[ -n "$currentAccount" && -f "$HOME/.ssh/id_rsa_${currentAccount}" ]]; then
+                ssh-keygen -lf "$HOME/.ssh/id_rsa_${currentAccount}.pub" 2>/dev/null
             fi
         else
             echo "No SSH keys loaded in agent"
