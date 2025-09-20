@@ -10,7 +10,7 @@ gitrpstrySwitchAccount() { #gsc -A <username same as in .gsc.config>
         if [ $sshActivateFlag -eq 1 ]; then
             "${SHELL:-/bin/sh}" "$nowDir/sshsc" -r
             [[ -f $HOME/.ssh/id_ssh_${accountName} ]] && "${SHELL:-/bin/sh}" "$nowDir/sshsc" "${accountName}"
-            echo "$SUCCESS Switched to ssh account: $accountName"
+            echo "$SUCCESS Switched to ssh account: $accountName" 
         else
             echo "${HINT} If you want to use  key, must -S for SSH activate"
             echo "$SUCCESS Switched to non-ssh account: $accountName"

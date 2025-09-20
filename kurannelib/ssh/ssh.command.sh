@@ -35,8 +35,8 @@ addtoSSHAgent() {
         if [ -f $HOME/.ssh/id_ssh_${acct} ]; then
             ssh-add ~/.ssh/id_ssh_${acct} > /dev/null 2>&1
         else
-            echo "${YELLOW}WARNING: ${NC}Can't find id_ssh_${acct} on your ~/.ssh do u want to create new one?"
-            echo "${RED}CHOICE: ${NC}Y/y for Yes, else for No: "
+            echo "$WARNING Can't find id_ssh_${acct} on your ~/.ssh do u want to create new one?"
+            echo "$CHOICE [Y/y] for Yes, else for No: "
             read -k 1 createSshKeyAns
             if [[ ! "$createSshKeyAns" == "Y" && ! "$createSshKeyAns" == "y" ]]; then
                 echo "Did't do anything."

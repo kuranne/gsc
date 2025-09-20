@@ -81,39 +81,6 @@ gitrpstryInit() {
     fi
 }
 
-#--- gitignore ---#
-gitrpstryGitignore() {
-    if [ -f .gitignore ]; then
-        echo -e "$DETECTED .gitignore already exists, skipping..."
-        return 0
-    fi
-    
-    if [ -n "$gitIgnorePath" ] && [ -f "$gitIgnorePath" ]; then
-        cat "$gitIgnorePath" >> .gitignore || { echo "$ERROR Failed to copy .gitignore template"; errorExit; }
-        echo -e "\n# gsc Script\n.gsc.config" >> .gitignore
-
-    else
-        echo -e "${YELLOW}WARNING: ${NC}Template not found, creating basic .gitignore"
-        cat > .gitignore << 'EOF'
-
-#MacOS
-.DS_Store
-
-#vscode
-.vscode/
-
-#logs
-*.log
-
-#dependencies
-node_modules/
-EOF
-        echo -e "\n# gsc Script\n.gsc.config" >> .gitignore
-
-    fi
-    echo -e "${SUCCESS} .gitignore created successfully"
-}
-
 #--- git Add ---#
 gitrpstryAdd() {
     gitValidateRepo || errorExit

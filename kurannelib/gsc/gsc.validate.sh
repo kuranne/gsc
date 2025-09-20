@@ -31,3 +31,7 @@ gitValidateCommitMessage() {
 gitValidateNotFoundGit() {
     command -v git >/dev/null 2>&1 || { echo "$ERROR Git is not installed"; errorExit; }
 }
+
+gscValidateBackup(){
+    [[ -d "$backupDir" ]] || { echo "$ERROR .gscbackup don't found"; errorExit; }
+}

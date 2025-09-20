@@ -11,6 +11,17 @@ for PATHforgsc in "$nowDir/kurannelib/gsc/"gsc.*.sh; do
     source "$PATHforgsc" || { echo "\033[0;31mERROR:\033[0m Can't load $PATHforgsc"; exit 1 ; }
 done
 
+#--- gsc.config ---#
+[[ -f "${nowDir}/kurannelib/gsc.config" ]] || { echo "\033[0;31mERROR:\033[0m not found gsc.config in $nowDir/kurannelib"; exit 1 ; }
+if [ -f "${hereDir}/.gsc.config" ]; then
+    source "${hereDir}/.gsc.config"
+elif [ -f "${nowDir}/kurannelib/gsc.config" ]; then
+    cp "${nowDir}/kurannelib/gsc.config" "${hereDir}/.gsc.config" || errorExit
+    source "${hereDir}/.gsc.config"
+else
+    echo "\033[0;31mError:\033[0m Can't load gsc.config" || errorExit
+fi
+
 #--- Origin Variables ---#
 
 # utils
@@ -103,6 +114,7 @@ for arg in "$@"; do
         remove) gitrpstryRemove ;;
         reset) resetHardFlag=1 ;;
         restore) restoreAll ;;
+        remove-restore) removeBackup;;
         stash) shift; stashFlag=1; stashMessage="$1";;
         stashpop) stashPopFlag=1 ;;
         blame) shift; blameFlag=1; blameFile="$1" ;;
@@ -118,3 +130,4 @@ done
 gitValidateNotFoundGit || errorExit # Check if git was installed
 gsc_main # main
 gscClear # clear .gsc.config
+exit 0

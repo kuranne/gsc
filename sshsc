@@ -11,6 +11,17 @@ for PATHforSSH in "$nowDir/kurannelib/ssh/"ssh.*.sh; do
     source "$PATHforSSH" || { echo "\033[0;31mERROR:\033[0m Can't load $PATHforSSH"; exit 1 ; }
 done
 
+#--- gsc.config ---#
+[[ -f "${nowDir}/kurannelib/gsc.config" ]] || { echo "\033[0;31mERROR:\033[0m not found gsc.config in $nowDir/kurannelib"; exit 1 ; }
+if [ -f "${hereDir}/.gsc.config" ]; then
+    source "${hereDir}/.gsc.config"
+elif [ -f "${nowDir}/kurannelib/gsc.config" ]; then
+    cp "${nowDir}/kurannelib/gsc.config" "${hereDir}/.gsc.config" || errorExit
+    source "${hereDir}/.gsc.config"
+else
+    echo "\033[0;31mError:\033[0m Can't load gsc.config" || errorExit
+fi
+
 #--- Origin Variable ---#
 removeSsh=0
 createSsh=0
@@ -21,7 +32,7 @@ while getopts "rC" opt; do
     case $opt in
         r) removeSsh=1 ;;
         C) createSsh=1 ;;
-        \?) echo "$USAGE ssc [-r|-C] [accountName...]" >&2; exit 1 ;;
+        \?) echo "$USAGE ssc [-r|-C] [accountName...]" >&2; errorExit ;;
     esac
 done
 
@@ -41,3 +52,4 @@ done
 [[ $createSsh -eq 1 ]] && createSshKey
 addtoSSHAgent
 gscClear
+exit 0
