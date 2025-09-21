@@ -6,9 +6,9 @@ main() {
         shift
         if typeset -f "$cmd" >/dev/null; then
             "$cmd" "$@"
-            normalExit
-            return
         fi
+    else
+        gitOperation "$@"
     fi
-    gitOperation "$@"
+    normalExit
 }
