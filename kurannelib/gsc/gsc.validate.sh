@@ -7,6 +7,10 @@ errorExit() {
     gscClear; exit 1
 }
 
+normalExit() {
+    gscClear; exit 0
+}
+
 gitValidateURL() {
     local url="$1"
     [[ -n "$url" ]] || { echo "$ERROR URL cannot be empty"; errorExit; }

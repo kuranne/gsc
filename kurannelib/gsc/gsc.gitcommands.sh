@@ -1,0 +1,413 @@
+#--- Reset ---#
+reset() {
+    gitValidateRepo || errorExit
+    echo -n "${WARNING} ${RED}¿Reset HARD?${NC}[y/N]: "
+    if read -q; then
+        echo -ne "\n${WARNING} Want to backup?[y/N]: "
+        if read -q; then
+            backup || errorExit
+        fi
+        git reset --hard HEAD || { echo -e "\n${ERROR} reset failed"; errorExit; }        
+        git clean -fd || { echo -e "\n${ERROR} clean failed"; errorExit; }
+    else
+        echo -e "\n${CYAN}CANCELLED${NC}"
+    fi   
+}
+
+#--- Sync ---#
+sync() {
+    gitValidateRepo || errorExit
+    git fetch --all --prune || { echo "$ERROR Failed to fetch"; errorExit; }
+    gitPull || { echo "$ERROR Failed to pull"; errorExit; }
+    echo "$SUCCESS Synced with remote"
+}
+
+#--- Stash ---#
+stash() {
+    gitStashSave() {
+        gitValidateRepo || errorExit
+        local msg="$1"
+        git stash push -m "$msg" || { echo "$ERROR Failed to stash"; errorExit; }
+        echo "$SUCCESS Stashed with message: $msg"
+    }
+    gitStashPop() {
+        gitValidateRepo || errorExit
+        git stash pop || { echo "$ERROR Failed to pop stash"; errorExit; }
+        echo "$SUCCESS Stash popped"
+    }
+    if [ $# -gt 0 ]; then
+        while getopts "s:p" opt; do
+            case $opt in
+                s) gitStashSave "$OPTARG";;
+                p) gitStashPop;;
+                \?) echo -e "
+$ERROR Unknow option, use
+s <message>     stash push
+p               stash pop
+
+Usecase
+gsc stash -s 'message'
+"; errorExit;;
+            esac
+        done
+    else
+        stashchoice=("Push" "Pop")
+        echo "$CHOICE select option to stash"
+        select answer in $stashchoice[@]; do
+            [ -n "$answer" ] && break
+        done
+        if [[ "$answer" == "Push" ]]; then
+            echo -n "$ANNOUNCE Type message(s): "
+            read pushmessage
+            echo
+            gitStashSave "$pushmessage" || errorExit
+        else
+            gitStashPop || errorExit
+        fi
+    fi
+}
+
+#--- git Pull ---#
+gitPull() {
+    gitValidateRepo || errorExit
+    local remotes=($(git remote))
+    if [ ${#remotes[@]} -eq 0 ]; then
+        echo "$ERROR No remote found. Add a remote first with: git remote add <name> <url>"
+        errorExit
+    elif [ ${#remotes[@]} -gt 1 ]; then
+        echo "${CHOICE} Multiple remotes found:"
+        select chosenRemote in "${remotes[@]}"; do
+            [ -n "$chosenRemote" ] && break
+        done
+        varPull="$chosenRemote"
+    else
+        varPull="${remotes[1]}"
+    fi
+    local branches=($(git branch --format='%(refname:short)'))
+    if [ ${#branches[@]} -eq 0 ]; then
+        echo "$ERROR No branches found."
+        errorExit
+    elif [ ${#branches[@]} -gt 1 ]; then
+        echo "${CHOICE} Multiple branches found:"
+        select chosenBranch in "${branches[@]}"; do
+            [ -n "$chosenBranch" ] && break
+        done
+        varBranch="$chosenBranch"
+    else
+        varBranch="${branches[1]}"
+    fi
+    git push "$varPull" "$varBranch" || { echo "$ERROR Failed to pusll to $varPull/$varBranch"; errorExit; }
+    echo "$SUCCESS Pushed to $varPull/$varBranch"
+}
+
+gitOperation() {
+    #--- Blame ---#
+    gitBlame() {
+        gitValidateRepo || errorExit
+        git blame "$blameFile" || { echo "$ERROR Failed to blame $blameFile"; errorExit; }
+    }
+
+    #--- Clone ---#
+    gitrpstryClone() { #gsc -C <git repository url or ssh>
+        gitValidateURL "$gitCloneUrl" || errorExit
+
+        local varRepoName=$(basename "$gitCloneUrl" .git)
+        [[ -d "$varRepoName" ]] && { echo "$ERROR Directory $varRepoName already exists"; errorExit; }
+
+        git clone "${gitCloneUrl}" || { echo "$ERROR Failed to clone repository"; errorExit; }
+        cd "$varRepoName" || { echo "$ERROR Failed to enter cloned directory"; errorExit; }
+
+        echo "$SUCCESS Cloned directory: ${PINK}$varRepoName${NC}"
+        echo "$WARNING Want to pull?[y/N]: "
+        read -q varPull
+        { [[ $varPull == "Y" ]] || [[ $varPull == "y" ]];} && { gitPull || { echo "${WARNING} Failed to pull $varRepoName"; }}
+    }
+
+    #--- Init ---#
+    gitrpstryInit() {
+        if [ -d .git ]; then
+            echo -e "${DETECTED} Already initialized"
+            return 0
+        fi
+
+        git init >/dev/null || { echo "$ERROR Failed to initialize repository"; errorExit; }
+        echo -e "${GREEN}Alright! ${NC}Init Successful"
+
+
+        # if we just switched account, configure it for this repo
+        if [ -n "$currentAccount" ] && [ -n "${gitAccounts[$currentAccount]}" ]; then
+            git config user.name "$currentAccount" || echo -e "${YELLOW}WARNING: Failed to set user name${NC}"
+            git config user.email "${gitAccounts[$currentAccount]}" || echo -e "${YELLOW}WARNING: Failed to set user email${NC}"
+        fi
+    }
+
+    #--- git Add ---#
+    gitrpstryAdd() {
+        gitValidateRepo || errorExit
+
+        git add . || { echo "$ERROR Failed to add files"; errorExit; }
+        echo "$SUCCESS Files added to staging"
+    }
+
+    #--- git Commit ---#
+    gitrpstryCommit() {
+        gitValidateRepo || errorExit
+        if [ -z "$(git diff --cached --name-only)" ]; then
+            git add . || { echo "$ERROR Failed to stage files"; errorExit; }
+        fi
+
+        gitValidateCommitMessage "$commitMessage" || errorExit
+
+        git commit -m "$commitMessage" || { echo "$ERROR Failed to commit"; errorExit; }
+        echo "$SUCCESS Committed with message: '$commitMessage'"
+    }
+
+    #--- git Push ---#
+    gitrpstryPush() {
+        gitValidateRepo || errorExit
+
+        local remotes=($(git remote))
+        if [ ${#remotes[@]} -eq 0 ]; then
+            echo "$ERROR No remote found. Add a remote first with: git remote add <name> <url>"
+            errorExit
+        elif [ ${#remotes[@]} -gt 1 ]; then
+            echo "${CHOICE} Multiple remotes found:"
+            select chosenRemote in "${remotes[@]}"; do
+                [ -n "$chosenRemote" ] && break
+            done
+            varPush="$chosenRemote"
+        else
+            varPush="${remotes[1]}"
+        fi
+
+        local branches=($(git branch --format='%(refname:short)'))
+        if [ ${#branches[@]} -eq 0 ]; then
+            echo "$ERROR No branches found."
+            errorExit
+        elif [ ${#branches[@]} -gt 1 ]; then
+            echo "${CHOICE} Multiple branches found:"
+            select chosenBranch in "${branches[@]}"; do
+                [ -n "$chosenBranch" ] && break
+            done
+            varBranch="$chosenBranch"
+        else
+            varBranch="${branches[1]}"
+        fi
+        echo "${WARNING} Want to pull before push?[y/N]: "
+        read -q varPushPullAns
+        if [[ "$varPushPullAns" == "Y" || "$varPushPullAns" == "y" ]];then
+            git pull "$varPush" || { echo "$ERROR Failed to pull from $varPush"; errorExit; }
+        fi
+        git push "$varPush" "$varBranch" || { echo "$ERROR Failed to push to $varPush/$varBranch"; errorExit; }
+        echo "$SUCCESS Pushed to $varPush/$varBranch"
+    }
+
+    #--- Status ---#
+    gitStatus() {
+        gitValidateRepo || errorExit
+        git status
+    }
+
+    #--- Log ---#
+    gitLog() {
+        gitValidateRepo || errorExit
+        git log --oneline --graph --decorate -n 10
+    }
+
+    #--- Diff ---#
+    gitDiff() {
+        gitValidateRepo || errorExit
+        git diff
+    }
+
+    #--- gitignore ---#
+    gitrpstryGitignore() {
+        if [ -f .gitignore ]; then
+            echo -e "$DETECTED .gitignore already exists, skipping..."
+            return 0
+        fi
+
+        if [ -n "$gitIgnorePath" ] && [ -f "$gitIgnorePath" ]; then
+            cat "$gitIgnorePath" >> .gitignore || { echo "$ERROR Failed to copy .gitignore template"; errorExit; }
+            echo -e "\n# gsc Script\n.gsc.config" >> .gitignore
+        else
+            echo -e "$ANNOUNCE Template not found, creating basic .gitignore"
+            cat > .gitignore << 'EOF'
+
+#--- System ---#
+# OSX
+.DS_STORE
+# NT
+Thumbs.db
+
+#--- tool ---#
+.vscode/
+.git/
+.gitignore
+.gsc.config
+
+#--- executeable ---#
+*.exe
+*.app
+*.out
+
+EOF
+        fi
+        echo -e "${SUCCESS} .gitignore created successfully"
+    }
+    if [ $# -gt 0 ]; then
+        accountFlag=0; accountName=""; sshActivateFlag=0
+        currentAccountFlag=0
+        local gitCloneFlag=0; local gitCloneUrl=""
+        local gitInitFlag=0
+        local gitPullFlag=0; local gitAddFlag=0; local gitCommitFlag=0; commitMessage=""; local gitPushFlag=0
+        local gitLogFlag=0; local gitDiffFlag=0; local gitBlameFlag=0
+
+        while getopts "C:A:c:SIPaipsldbu" opt; do
+            case $opt in
+                C) gitCloneFlag=1; gitCloneUrl="$OPTARG";;
+                A) accountFlag=1; accountName="$OPTARG";;
+                S) sshActivateFlag=1 ;;
+                I) gitInitFlag=1 ;;
+                P) gitPullFlag=1 ;;
+                a) gitAddFlag=1 ;;
+                c) gitCommitFlag=1; commitMessage="$OPTARG" ;;
+                i) gitIgnoreFlag=1;;
+                p) gitPushFlag=1 ;;
+                s) gitStatusFlag=1 ;;
+                l) gitLogFlag=1 ;;
+                d) gitDiffFlag=1 ;;
+                b) gitBlameFlag=1 ;;
+                u) currentAccountFlag=1 ;;
+                \?) echo -e "
+$ERROR Unknow option, use
+-C <url>        clone repository to $hereDir
+-A <username>   assign username and password in gsc.config to git config
+-S              use ssh
+-I              git init
+-i              copy gitignore to $hereDir
+-a              git add
+-c <message>    git commit -m 'message'
+-p              git push
+-P              git pull
+-s              git status
+-l              git log
+-d              git diff
+-b              git blame
+-u              check current username
+
+Usecase
+gsc -SA username -Iiac message -psldb
+gsc -SA username -C url
+"; errorExit;;
+            esac
+        done
+
+        [[ $accountFlag -eq 1 ]] && gitrpstrySwitchAccount
+        [[ $currentAccountFlag -eq 1 ]] && currentAccount
+        [[ $gitCloneFlag -eq 1 ]] && gitrpstryClone
+        [[ $gitInitFlag -eq 1 ]] && gitrpstryInit
+        [[ $gitIgnoreFlag -eq 1 ]] && gitrpstryGitignore
+        [[ $gitPullFlag -eq 1 ]] && gitPull
+        [[ $gitAddFlag -eq 1 ]] && gitrpstryAdd
+        [[ $gitCommitFlag -eq 1 ]] && gitrpstryCommit
+        [[ $gitPushFlag -eq 1 ]] && gitrpstryPush
+        [[ $gitStatusFlag -eq 1 ]] && gitStatus
+        [[ $gitLogFlag -eq 1 ]] && gitLog
+        [[ $gitDiffFlag -eq 1 ]] && gitDiff
+        [[ $gitBlameFlag -eq 1 ]] && gitBlame
+    else
+        echo "Hello! from gsc."
+    fi
+
+}
+
+#--- Branch ---#
+branch() {
+    gitBranchCreate() {
+        gitValidateRepo || errorExit
+        git checkout -b "$branchName" || { echo "$ERROR Failed to create branch $branchName"; errorExit; }
+        echo "$SUCCESS Created and switched to branch: $branchName"
+    }
+
+    gitBranchList() {
+        gitValidateRepo || errorExit
+        git branch -a
+    }
+
+    gitBranchDelete() {
+        gitValidateRepo || errorExit
+        git branch -d "$branchDeleteName" || { echo "$ERROR Failed to delete branch $branchDeleteName"; errorExit; }
+        echo "$SUCCESS Deleted branch $branchDeleteName"
+    }
+
+    gitDeleteMergeBranches() {
+        gitValidateRepo || errorExit
+        local currentBranch=$(git rev-parse --abbrev-ref HEAD)
+        git branch --merged | egrep -v "(^\*|master|main|dev)" | while read branchBranch; do
+            echo "${WARNING} Deleting merged branch: $branchBranch"
+            git branch -d "$branchBranch" || echo "${ERROR} Failed to delete branch: $branchBranch"
+        done
+        echo "${SUCCESS} Merged branches deleted (not master/main/dev and $currentBranch)"
+    }
+    if [ $# -gt 0 ]; then
+        while getopts "c:d:Dl" opt; do
+            case $opt in
+                c) branchName="$OPTARG"; gitBranchCreate;;
+                d) branchDeleteName="$OPTARG"; gitBranchDelete;;
+                D) gitDeleteMergeBranches;;
+                l) gitBranchList;;
+                \?) echo -e "
+$ERROR Unknow option, use
+-c <branch name>     create branch with name
+-d <branch name>     delete branch with name
+-D                   delete all merged branch
+-l                   list all branch
+
+Usecase
+gsc branch -c main
+
+"; errorExit;;
+            esac
+        done
+    else
+        gitBranchList
+    fi
+}
+
+#--- Tag ---#
+tag(){
+    gitTagCreate() {
+        gitValidateRepo || errorExit
+        git tag "$tagName" || { echo "$ERROR Failed to create tag $tagName"; errorExit; }
+        echo "$SUCCESS Created tag: $tagName"
+    }
+
+    gitTagList() {
+        gitValidateRepo || errorExit
+        git tag
+    }
+
+    gitTagDelete() {
+        gitValidateRepo || errorExit
+        git tag -d "$tagDeleteName" || { echo "$ERROR Failed to delete tag $tagDeleteName"; errorExit; }
+        echo "$SUCCESS Deleted tag: $tagDeleteName"
+    }
+    if [ $# -gt 0 ]; then
+        while getopts "c:d:l" opt; do
+            case $opt in
+                c) tagName="$OPTARG"; gitTagCreate;;
+                d) tagDeleteName="$OPTARG"; gitTagDelete;;
+                l) gitTagList;;
+                \?) echo -e "
+$ERROR Unknow option, use
+-c <name>       create tag with name
+-d <name>       delete tag with name
+-l              list tag
+"; errorExit;;
+            esac
+        done
+    else
+        gitTagList
+    fi
+}
