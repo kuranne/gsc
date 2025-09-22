@@ -1,0 +1,26 @@
+gitBranchCreate() {
+    gitValidateRepo || errorExit
+    git checkout -b "$branchName" || { echo "$ERROR Failed to create branch $branchName"; errorExit; }
+    echo "$SUCCESS Created and switched to branch: $branchName"
+}
+
+gitBranchList() {
+    gitValidateRepo || errorExit
+    git branch -a
+}
+
+gitBranchDelete() {
+    gitValidateRepo || errorExit
+    git branch -d "$branchDeleteName" || { echo "$ERROR Failed to delete branch $branchDeleteName"; errorExit; }
+    echo "$SUCCESS Deleted branch $branchDeleteName"
+}
+
+gitDeleteMergeBranches() {
+    gitValidateRepo || errorExit
+    local currentBranch=$(git rev-parse --abbrev-ref HEAD)
+    git branch --merged | egrep -v "(^\*|master|main|dev)" | while read branchBranch; do
+        echo "${WARNING} Deleting merged branch: $branchBranch"
+        git branch -d "$branchBranch" || echo "${ERROR} Failed to delete branch: $branchBranch"
+    done
+    echo "${SUCCESS} Merged branches deleted (not master/main/dev and $currentBranch)"
+}
