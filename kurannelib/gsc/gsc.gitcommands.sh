@@ -162,19 +162,22 @@ gsc -SA username -C url
 #--- Branch ---#
 branch() {
     source "${nowDir}/kurannelib/gsc/gsc.gitBranch.function" || { echo "$ERROR Failed to source gsc.gitBranch.function"; errorExit; }
+    gitValidateRepo || errorExit
     if [ $# -gt 0 ]; then
-        while getopts "c:d:Dl" opt; do
+        while getopts "c:d:Dlm" opt; do
             case $opt in
                 c) branchName="$OPTARG"; gitBranchCreate;;
                 d) branchDeleteName="$OPTARG"; gitBranchDelete;;
                 D) gitDeleteMergeBranches;;
                 l) gitBranchList;;
+                m) gitMergeBranch;;
                 \?) echo -e "
 $ERROR Unknow option, use
 -c <branch name>     create branch with name
 -d <branch name>     delete branch with name
 -D                   delete all merged branch
 -l                   list all branch
+-m                   merge a branch
 
 Usecase
 gsc branch -c main
