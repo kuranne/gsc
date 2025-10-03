@@ -152,7 +152,7 @@ gsc -SA username -C url
         done
 
         [[ $accountFlag -eq 1 ]] && gitrpstrySwitchAccount
-        [[ $currentAccountFlag -eq 1 ]] && currentAccount
+        [[ $currentAccountFlag -eq 1 ]] && gitrpstryShowAccount
         [[ $gitCloneFlag -eq 1 ]] && gitrpstryClone
         [[ $gitInitFlag -eq 1 ]] && gitrpstryInit
         [[ $gitIgnoreFlag -eq 1 ]] && gitrpstryGitignore
