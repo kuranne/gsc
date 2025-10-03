@@ -1,30 +1,41 @@
-#--- Reset ---#
-reset() {
+#--- Re-Something ---#
+re() {
+    source "$nowDir/kurannelib/gsc/gsc.re.sh" || { echo "$ERROR Failed to source gsc.re.sh"; errorExit; }
     gitValidateRepo || errorExit
-    echo -n "${WARNING} ${RED}¿Reset HARD?${NC}[y/N]: "
-    if read -q; then
-        echo -ne "\n${WARNING} Want to backup?[y/N]: "
-        if read -q; then
-            backup || errorExit
-        fi
-        git reset --hard HEAD || { echo -e "\n${ERROR} reset failed"; errorExit; }        
-        git clean -fd || { echo -e "\n${ERROR} clean failed"; errorExit; }
+
+    if [ $# -gt 0 ]; then
+        while getopts "n:HS" opt; do
+            case $opt in
+                n) gitrename "$OPTARG";;
+                H) gitreset "Hard";;
+                S) gitreset "Soft";;
+                \?) echo "
+$ERROR Unknow argrument $opt, use
+-n <commit message>         to rename the last commit
+-H                          to reset hard
+-S                          to reset soft";;
+            esac
+            break
+        done
     else
-        echo -e "\n${CYAN}CANCELLED${NC}"
-    fi   
+        echo "$ANNOUNCE gsc re need only 1 opt."
+    fi
 }
 
 #--- Sync ---#
 sync() {
     gitValidateRepo || errorExit
     git fetch --all --prune || { echo "$ERROR Failed to fetch"; errorExit; }
-    gitPull || { echo "$ERROR Failed to pull"; errorExit; }
-    echo "$SUCCESS Synced with remote"
+    echo -n "$CHOICE Do you want to pull now?[y/N]: "
+    if read -q; then
+        gitPull || { echo "$ERROR Failed to pull"; errorExit; }
+        echo "$SUCCESS Synced with remote"
+    fi
 }
 
 #--- Stash ---#
 stash() {
-    source "${nowDir}/kurannelib/gsc/gsc.gitStash.function" || { echo "$ERROR Failed to source gsc.gitStash.function"; errorExit; }
+    source "${nowDir}/kurannelib/gsc/gsc.gitStash.sh" || { echo "$ERROR Failed to source gsc.gitStash.sh"; errorExit; }
     if [ $# -gt 0 ]; then
         while getopts "s:p" opt; do
             case $opt in
@@ -91,7 +102,7 @@ gitPull() {
 }
 
 gitOperation() {
-    source "${nowDir}/kurannelib/gsc/gsc.gitOperation.function" || {echo "$ERROR Failed to source gsc.gitOperation.function"; errorExit;}
+    source "${nowDir}/kurannelib/gsc/gsc.gitOperation.sh" || {echo "$ERROR Failed to source gsc.gitOperation.sh"; errorExit;}
     if [ $# -gt 0 ]; then
         accountFlag=0; accountName=""; sshActivateFlag=0
         currentAccountFlag=0
@@ -161,7 +172,7 @@ gsc -SA username -C url
 
 #--- Branch ---#
 branch() {
-    source "${nowDir}/kurannelib/gsc/gsc.gitBranch.function" || { echo "$ERROR Failed to source gsc.gitBranch.function"; errorExit; }
+    source "${nowDir}/kurannelib/gsc/gsc.gitBranch.sh" || { echo "$ERROR Failed to source gsc.gitBranch.sh"; errorExit; }
     gitValidateRepo || errorExit
     if [ $# -gt 0 ]; then
         while getopts "c:d:Dlm" opt; do
@@ -192,7 +203,7 @@ gsc branch -c main
 
 #--- Tag ---#
 tag(){
-    source "${nowDir}/kurannelib/gsc/gsc.gitTag.function" || { echo "$ERROR Failed to source gsc.gitTag.function"; errorExit;}
+    source "${nowDir}/kurannelib/gsc/gsc.gitTag.sh" || { echo "$ERROR Failed to source gsc.gitTag.sh"; errorExit;}
     if [ $# -gt 0 ]; then
         while getopts "c:d:l" opt; do
             case $opt in

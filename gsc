@@ -4,10 +4,10 @@ nowDir="$(cd -- "$(dirname -- "${(%):-%x}")" && pwd)"
 hereDir="$(pwd)"
 
 #=== Import ===#
-for COREUTIL in "$nowDir/kurannelib/"core.*.sh; do
+for COREUTIL in "$nowDir/kurannelib/"core.*.zsh; do
     source "$COREUTIL" || { echo "\033[0;31mERROR:\033[0m Can't load $COREUTIL"; exit 1 ; }
 done
-for PATHforgsc in "$nowDir/kurannelib/gsc/"gsc.*.sh; do
+for PATHforgsc in "$nowDir/kurannelib/gsc/"gsc.*.zsh; do
     source "$PATHforgsc" || { echo "\033[0;31mERROR:\033[0m Can't load $PATHforgsc"; exit 1 ; }
 done
 

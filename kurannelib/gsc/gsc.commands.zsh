@@ -1,7 +1,7 @@
 #--- gscUpdate ---#
 update() {
     gitValidateNotFoundGit || errorExit
-    source "${nowDir}/kurannelib/gsc/gsc.update.function" || { echo "$ERROR Failed to source gsc.update.function"; errorExit; }
+    source "${nowDir}/kurannelib/gsc/gsc.update.sh" || { echo "$ERROR Failed to source gsc.update.sh"; errorExit; }
     if [ $# -gt 0 ]; then
         local gitIgnoreFlag=0
         local config_Flag=0
@@ -39,7 +39,7 @@ update -ci
 
 #--- Remove gsc or directory ---#
 remove() {
-    source "${nowDir}/kurannelib/gsc/gsc.remove.function" || { echo "$ERROR Failed to source gsc.remove.function"; errorExit; }
+    source "${nowDir}/kurannelib/gsc/gsc.remove.sh" || { echo "$ERROR Failed to source gsc.remove.sh"; errorExit; }
     if [ $# -gt 0 ]; then
         for arg in "$@"; do
             case $arg in
