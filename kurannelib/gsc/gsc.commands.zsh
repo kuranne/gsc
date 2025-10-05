@@ -103,3 +103,16 @@ restore() {
     cp -r "$restorePath"/* "$hereDir"/ || { echo "$ERROR Failed to restore backup"; errorExit; }
     echo "$SUCCESS Restored backup from $chosenBackup"
 }
+
+help() {
+    echo -e "
+gsc <option>        base function for git support
+gsc re <option>     reset Hard or Soft or rename the commit message
+gsc branch <option> branch command
+gsc tag <option>    tag command
+gsc remove          remove command
+gsc backup          to backup directory to ~/.gscbackup
+gsc restore         to restore directory from ~/.gscbackup
+gsc update          update .gsc.config and else
+gsc stash           stash command"
+}

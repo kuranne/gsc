@@ -144,6 +144,8 @@ $ERROR Unknow option, use
 -b              git blame
 -u              check current username
 
+use gsc help for more function
+
 Usecase
 gsc -SA username -Iiac message -psldb
 gsc -SA username -C url
