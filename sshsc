@@ -4,10 +4,10 @@ nowDir="$(cd -- "$(dirname -- "${(%):-%x}")" && pwd)"
 hereDir="$(pwd)"
 
 #--- Import ---#
-for COREUTIL in "$nowDir/kurannelib/"core.*.sh; do
+for COREUTIL in "$nowDir/kurannelib/"core.*.zsh; do
     source "$COREUTIL" || { echo "\033[0;31mERROR:\033[0m Can't load $COREUTIL"; exit 1 ; }
 done
-for PATHforSSH in "$nowDir/kurannelib/ssh/"ssh.*.sh; do
+for PATHforSSH in "$nowDir/kurannelib/ssh/"ssh.*.zsh; do
     source "$PATHforSSH" || { echo "\033[0;31mERROR:\033[0m Can't load $PATHforSSH"; exit 1 ; }
 done
 
