@@ -104,6 +104,22 @@ restore() {
     echo "$SUCCESS Restored backup from $chosenBackup"
 }
 
+config(){
+    source "${nowDir}/kurannelib/gsc/gsc.config.sh" || {echo "Failed to source gsc.config.sh"; errorExit;}
+    if [ $# -gt 0 ]; then
+        while getopts "p:" opt; do
+            case $opt in
+                p) gitConfigPullRebase "$OPTARG";;
+                \?) echo -e "
+Unknow option $opt use
+gsc config -p <true/false>      to config pull.rebase"; errorExit;;
+            esac
+        done
+    else
+        echo -e "Use gsc config -h for unknow option."
+    fi
+}
+
 help() {
     echo -e "
 gsc <option>        base function for git support
@@ -114,5 +130,6 @@ gsc remove          remove command
 gsc backup          to backup directory to ~/.gscbackup
 gsc restore         to restore directory from ~/.gscbackup
 gsc update          update .gsc.config and else
-gsc stash           stash command"
+gsc stash           stash command
+gsc config <option> set git config"
 }
