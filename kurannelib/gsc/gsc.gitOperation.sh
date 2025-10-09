@@ -82,9 +82,9 @@ gitrpstryPush() {
         varBranch="${branches[1]}"
     fi
     echo -n "${WARNING} Want to pull before push?[y/N]: "
-    if read -q;then
+    if read -q ;then
         echo
-        git pull "$varPush" || { echo "$ERROR Failed to pull from $varPush"; errorExit; }
+        git pull "$varPush" "$varBranch" || { echo "$ERROR Failed to pull from $varPush"; errorExit; }
     fi
     git push "$varPush" "$varBranch" || { echo "$ERROR Failed to push to $varPush/$varBranch"; errorExit; }
     echo "$SUCCESS Pushed to $varPush/$varBranch"
