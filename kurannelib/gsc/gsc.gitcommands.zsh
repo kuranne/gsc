@@ -158,9 +158,9 @@ gsc -SA username -C url
         [[ $gitCloneFlag -eq 1 ]] && gitrpstryClone
         [[ $gitInitFlag -eq 1 ]] && gitrpstryInit
         [[ $gitIgnoreFlag -eq 1 ]] && gitrpstryGitignore
-        [[ $gitPullFlag -eq 1 ]] && gitPull
         [[ $gitAddFlag -eq 1 ]] && gitrpstryAdd
         [[ $gitCommitFlag -eq 1 ]] && gitrpstryCommit
+        [[ $gitPullFlag -eq 1 ]] && gitPull
         [[ $gitPushFlag -eq 1 ]] && gitrpstryPush
         [[ $gitStatusFlag -eq 1 ]] && gitStatus
         [[ $gitLogFlag -eq 1 ]] && gitLog
