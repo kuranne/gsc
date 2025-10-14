@@ -110,8 +110,9 @@ gitOperation() {
         local gitInitFlag=0
         local gitPullFlag=0; local gitAddFlag=0; local gitCommitFlag=0; commitMessage=""; local gitPushFlag=0
         local gitLogFlag=0; local gitDiffFlag=0; local gitBlameFlag=0
+        local yesSkip=0
 
-        while getopts "C:A:c:SIPaipsldbu" opt; do
+        while getopts "C:A:c:SIPaipsldbuy" opt; do
             case $opt in
                 C) gitCloneFlag=1; gitCloneUrl="$OPTARG";;
                 A) accountFlag=1; accountName="$OPTARG";;
@@ -127,6 +128,7 @@ gitOperation() {
                 d) gitDiffFlag=1 ;;
                 b) gitBlameFlag=1 ;;
                 u) currentAccountFlag=1 ;;
+                y) yesSkip=1;;
                 \?) echo -e "
 $ERROR Unknow option, use
 -C <url>        clone repository to $hereDir
@@ -143,6 +145,7 @@ $ERROR Unknow option, use
 -d              git diff
 -b              git blame
 -u              check current username
+-y              skip for some command ex. gsc -yp to skip pull
 
 use gsc help for more function
 

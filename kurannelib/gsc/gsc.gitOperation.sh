@@ -12,10 +12,13 @@ gitrpstryClone() {
     git clone "${gitCloneUrl}" || { echo "$ERROR Failed to clone repository"; errorExit; }
     cd "$varRepoName" || { echo "$ERROR Failed to enter cloned directory"; errorExit; }
     echo "$SUCCESS Cloned directory: ${PINK}$varRepoName${NC}"
-    echo -n "$WARNING pull?[y/N]: "
-    if read -q; then
-        echo
-        gitPull || { echo "${WARNING} Failed to pull $varRepoName"; }
+    
+    if [ $yesSkip -eq 0 ]; then
+        echo -n "$CHOICE pull?[y/N]: "
+        if read -q; then
+            echo
+            gitPull || { echo "${WARNING} Failed to pull $varRepoName"; }
+        fi
     fi
 }
 
@@ -81,15 +84,17 @@ gitrpstryPush() {
     else
         varBranch="${branches[1]}"
     fi
-    if [[ ! $gitPullFlag -eq 1 ]]; then
+
+    if [[ ! $gitPullFlag -eq 1 && $yesSkip -eq 0 ]]; then
         echo -n "${WARNING} Want to pull before push?[y/N]: "
         if read -q ;then
             echo
             git pull "$varPush" "$varBranch" || { echo "$ERROR Failed to pull from $varPush"; errorExit; }
         fi
         git push "$varPush" "$varBranch" || { echo "$ERROR Failed to push to $varPush/$varBranch"; errorExit; }
-        echo "$SUCCESS Pushed to $varPush/$varBranch"
     fi
+
+    echo "$SUCCESS Pushed to $varPush/$varBranch"
 }
 
 #--- Status ---#
