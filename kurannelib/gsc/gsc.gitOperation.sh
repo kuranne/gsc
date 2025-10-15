@@ -123,7 +123,7 @@ gitrpstryGitignore() {
     fi
     if [ -n "$gitIgnorePath" ] && [ -f "$gitIgnorePath" ]; then
         cat "$gitIgnorePath" >> .gitignore || { echo "$ERROR Failed to copy .gitignore template"; errorExit; }
-        echo -e "\n# gsc Script\n.gsc.config" >> .gitignore
+        [[ $(grep -c .gsc.config .gitignore) -eq 0 ]] && echo -e "\n# gsc Script\n.gsc.config" >> .gitignore
     else
         echo -e "$ANNOUNCE Template not found, creating basic .gitignore"
         cat > .gitignore << 'EOF'
