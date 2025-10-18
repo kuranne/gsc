@@ -1,4 +1,3 @@
-
 # For Git & SSH managements (gsc & sshsc.sh)
 
 This progect aim to create gsc(git script) and sshsc.sh(ssh script) for fix my pain point who has more than one Git account and using SSH to autherize.
@@ -7,24 +6,29 @@ This progect aim to create gsc(git script) and sshsc.sh(ssh script) for fix my p
 
 ## Contributing
 
-- To use gsc, you can clone this repository into your directory by:
-``` bash
-git clone https://github.com/kuranne/myShScript
+Clone this repository to your local.
 ```
-- After did that, for comfort to run the script you may put
-```bash
-cd myShScript
-echo 'export PATH="#EditThisToPATHofThisDirectory:${PATH}"' >> $HOME/.zshrc
+git clone https://github.com/kuranne/gsc-project
 ```
-- Then reopen your shell or use
-```bash
-source $HOME/.zshrc
+then **don't forgot** to config your username and email in ```kurannelib/gsc.config``` to use with `-A` option
+
+### Recommend
+Add gsc to $PATH to your .zshrc  
+You can find method from AI or Search on internet. :)
+
+## Usages
+common git add commit and push.
 ```
-And All Done! try to use this to show the option gsc have
-```bash
+gsc -ac "commit message" -p
+```
+<br>
+help
+
+```
 gsc -h
 ```
 
-
-## Authors
-- [@kuranne](https://www.github.com/kuranne)
+## Authors 
+|name|position|
+|-|-|
+|[kuranne](https://www.github.com/kuranne)|pm, dev, tstr, qa, dp|
