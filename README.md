@@ -8,14 +8,14 @@ This progect aim to create gsc(git script) and sshsc.sh(ssh script) for fix my p
 
 Clone this repository to your local.
 ```
-git clone https://github.com/kuranne/gsc-project
+git clone https://github.com/kuranne/gsc.git
 ```
 then **don't forgot** to config your username and email in ```kurannelib/gsc.config``` to use with `-A` option
 
 ### Recommend
 Add gsc to $PATH to your .zshrc by setup yourself of use
 ```
-cd gsc-project && ./setup.sh
+cd gsc && ./setup.sh
 ```
 then `source $HOME/.zshrc`
 
