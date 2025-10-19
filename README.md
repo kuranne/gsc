@@ -13,8 +13,11 @@ git clone https://github.com/kuranne/gsc-project
 then **don't forgot** to config your username and email in ```kurannelib/gsc.config``` to use with `-A` option
 
 ### Recommend
-Add gsc to $PATH to your .zshrc  
-You can find method from AI or Search on internet. :)
+Add gsc to $PATH to your .zshrc by setup yourself of use
+```
+cd gsc-project && ./setup.sh
+```
+then `source $HOME/.zshrc`
 
 ## Usages
 common git add commit and push.
