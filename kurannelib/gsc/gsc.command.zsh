@@ -127,8 +127,8 @@ gsc re <option>     reset Hard or Soft or rename the commit message
 gsc branch <option> branch command
 gsc tag <option>    tag command
 gsc remove          remove command
-gsc backup          to backup directory to ~/.gscbackup
-gsc restore         to restore directory from ~/.gscbackup
+gsc backup          to backup directory to ~/.gsc/backup
+gsc restore         to restore directory from ~/.gsc/backup
 gsc update          update .gsc.config and else
 gsc stash           stash command
 gsc config <option> set git config"

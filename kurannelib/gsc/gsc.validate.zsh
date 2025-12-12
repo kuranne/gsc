@@ -37,5 +37,5 @@ gitValidateNotFoundGit() {
 }
 
 gscValidateBackup(){
-    [[ -d "$backupDir" ]] || { echo "$ERROR .gscbackup don't found"; errorExit; }
+    [[ -d "$backupDir" ]] || { echo "$ERROR .gsc/backup don't found"; errorExit; }
 }
