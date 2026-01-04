@@ -6,18 +6,16 @@ This progect aim to create gsc(git script) and sshsc.sh(ssh script) for fix my p
 
 ## Contributing
 
-Clone this repository to your local.
+Installing via  
+### curl  
 ```
-git clone https://github.com/kuranne/gsc.git
+curl -sSL https://raw.githubusercontent.com/kuranne/gsc/main/setup.sh | bash
 ```
-then **don't forgot** to config your username and email in ```kurannelib/gsc.config``` to use with `-A` option
 
-### Recommend
-Add gsc to $PATH to your .zshrc by setup yourself of use
+### wget  
 ```
-cd gsc && ./setup.sh
+wget -qO- https://raw.githubusercontent.com/kuranne/gsc/main/setup.sh | bash
 ```
-then `source $HOME/.zshrc`
 
 ## Usages
 common git add commit and push.

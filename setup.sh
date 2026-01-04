@@ -37,8 +37,8 @@ fi
 echo "Installing dependencies..."
 # Upgrade pip first?
 "$VENV_DIR/bin/pip" install --upgrade pip > /dev/null
-if [ -f "$INSTALL_DIR/source/requirements.txt" ]; then
-    "$VENV_DIR/bin/pip" install -r "$INSTALL_DIR/source/requirements.txt" || { echo "Failed to install requirements"; exit 1; }
+if [ -f "$INSTALL_DIR/requirements.txt" ]; then
+    "$VENV_DIR/bin/pip" install -r "$INSTALL_DIR/requirements.txt" || { echo "Failed to install requirements"; exit 1; }
 else
     echo "Warning: requirements.txt not found in $INSTALL_DIR/source"
 fi
